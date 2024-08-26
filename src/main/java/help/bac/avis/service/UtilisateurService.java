@@ -6,6 +6,10 @@ import help.bac.avis.entite.Utilisateur;
 import help.bac.avis.entite.Validation;
 import help.bac.avis.repository.UtilisateurRepository;
 import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -15,11 +19,20 @@ import java.util.Optional;
 
 @AllArgsConstructor
 @Service
-public class UtilisateurService {
+public class UtilisateurService implements UserDetailsService { // UserDetailsService est une interface qui permet de gérer les utilisateurs
+
     // Injection de dépendances
     private final UtilisateurRepository utilisateurRepository;
     private BCryptPasswordEncoder passwordEncoder;
     private final ValidationService validationService;
+
+
+    @Override // LoadUserByUsername permet de récupérer les informations d'un utilisateur
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        return this.utilisateurRepository
+                .findByEmail(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Utilisateur inconnu"));
+    }
 
     public void inscription(Utilisateur utilisateur) {
         if(!utilisateur.getEmail().contains("@")) {

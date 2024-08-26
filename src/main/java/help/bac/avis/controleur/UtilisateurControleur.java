@@ -1,15 +1,16 @@
 package help.bac.avis.controleur;
 
+import help.bac.avis.dto.AuthentificationDTO;
 import help.bac.avis.entite.Utilisateur;
 import help.bac.avis.service.UtilisateurService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
@@ -20,16 +21,28 @@ import java.util.Map;
 public class UtilisateurControleur {
 
     private final UtilisateurService utilisateurService;
+    private AuthenticationManager authenticationManager;
 
     @ResponseStatus(HttpStatus.CREATED)
-    @RequestMapping(path = "/inscription")
+    @PostMapping(path = "/inscription")
     public void inscription(@RequestBody Utilisateur utilisateur) {
         this.utilisateurService.inscription(utilisateur);
         log.info("Inscription");
     }
 
-    @RequestMapping(path = "/activation")
+    @PostMapping(path = "/activation")
     public void activation(@RequestBody Map<String, String> activation) {
         this.utilisateurService.activation(activation);
+    }
+
+    @PostMapping(path = "/connexion")
+    public Map<String, String> connexion(@RequestBody AuthentificationDTO authentificationDTO) {
+        Authentication authenticate = this.authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(authentificationDTO.username(), authentificationDTO.password())
+        );
+
+        log.info("result {}", authenticate.isAuthenticated());
+
+        return  null;
     }
 }
