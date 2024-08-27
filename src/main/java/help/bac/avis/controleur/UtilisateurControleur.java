@@ -2,6 +2,7 @@ package help.bac.avis.controleur;
 
 import help.bac.avis.dto.AuthentificationDTO;
 import help.bac.avis.entite.Utilisateur;
+import help.bac.avis.securite.JwtService;
 import help.bac.avis.service.UtilisateurService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +23,7 @@ public class UtilisateurControleur {
 
     private final UtilisateurService utilisateurService;
     private AuthenticationManager authenticationManager;
+    private JwtService jwtService;
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping(path = "/inscription")
@@ -41,7 +43,9 @@ public class UtilisateurControleur {
                 new UsernamePasswordAuthenticationToken(authentificationDTO.username(), authentificationDTO.password())
         );
 
-        log.info("result {}", authenticate.isAuthenticated());
+        if(authenticate.isAuthenticated()) {
+            return this.jwtService.generate(authentificationDTO.username());
+        }
 
         return  null;
     }

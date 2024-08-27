@@ -44,10 +44,9 @@ public class ConfigurationSecuriteApplication {
     */
 
     @Bean // spring met à notre disposition une configuration pour authentication manager
-    public AuthenticationManager autenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+    public AuthenticationManager autenticwationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
-
 
     /*
     * AuthenticationManager s'appuis sur un authencationProvider.
