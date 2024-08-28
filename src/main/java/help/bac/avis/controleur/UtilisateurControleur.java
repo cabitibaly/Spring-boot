@@ -39,6 +39,8 @@ public class UtilisateurControleur {
 
     @PostMapping(path = "/connexion")
     public Map<String, String> connexion(@RequestBody AuthentificationDTO authentificationDTO) {
+
+        // Authentification d'un utilisateur avec son email et mot de passe
         Authentication authenticate = this.authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(authentificationDTO.username(), authentificationDTO.password())
         );

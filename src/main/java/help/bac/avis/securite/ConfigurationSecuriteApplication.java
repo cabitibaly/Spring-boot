@@ -1,6 +1,7 @@
 package help.bac.avis.securite;
 
 import help.bac.avis.service.UtilisateurService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -11,13 +12,25 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity // Permet de déclarer la configuration de sécurité
 public class ConfigurationSecuriteApplication {
+
+    private final UserDetailsService userDetailsService;
+    private final JwtFilter jwtFilter;
+    private final BCryptPasswordEncoder bCryptPasswordEncoder;
+
+    public ConfigurationSecuriteApplication(UserDetailsService userDetailsService, JwtFilter jwtFilter, BCryptPasswordEncoder bCryptPasswordEncoder) {
+        this.userDetailsService = userDetailsService;
+        this.jwtFilter = jwtFilter;
+        this.bCryptPasswordEncoder = bCryptPasswordEncoder;
+    }
 
     @Bean // Un bean est une classe qu'on peut instancier
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception { // Configuration de sécurité
@@ -31,12 +44,13 @@ public class ConfigurationSecuriteApplication {
                                                     .requestMatchers(HttpMethod.POST,"/activation").permitAll()
                                                     .requestMatchers(HttpMethod.POST,"/connexion").permitAll()
                                                     .anyRequest().authenticated()
-                            ).build();
-    }
+                            ) // Une session pour l'authentification de l'utilisateur car spring fonctionne en session
+                            .sessionManagement(httpSecuritySessionManagementConfigurer ->
+                                        httpSecuritySessionManagementConfigurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS) // On verifie le token chaque fois qu'une requête est faite
 
-    @Bean // pour le cryptage des mots de passe
-    public BCryptPasswordEncoder passwordEncoder() { // Il est fourni par Spring pour crypter les mots de passe
-        return  new BCryptPasswordEncoder();
+                                    )
+                            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                            .build();
     }
 
     /*
@@ -54,11 +68,11 @@ public class ConfigurationSecuriteApplication {
     * */
 
     @Bean
-    public AuthenticationProvider authenticationProvider(UserDetailsService userDetailsService) {
+    public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider(); // accès à la base de données
         // Utilisation de la dependance injectée
         daoAuthenticationProvider.setUserDetailsService(userDetailsService); // on lui passe notre service utilisateur
-        daoAuthenticationProvider.setPasswordEncoder(this.passwordEncoder()); // on lui passe notre cryptage
+        daoAuthenticationProvider.setPasswordEncoder(this.bCryptPasswordEncoder); // on lui passe notre cryptage
         return daoAuthenticationProvider;
     }
 }
