@@ -1,9 +1,10 @@
 package help.bac.avis.securite;
 
+import help.bac.avis.entite.Jwt;
 import help.bac.avis.entite.Utilisateur;
+import help.bac.avis.repository.JwtRepository;
 import help.bac.avis.service.UtilisateurService;
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwt;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
@@ -20,14 +21,31 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
+    public static final String BEARER = "bearer";
     private final String ENCRYPTION_KEY = "92804f57bc0169e8291b008e786251fbd6c5a289e8824bfaebd61f836301ec0c"; // Clé de chiffrement
     private UtilisateurService utilisateurService;
+    private JwtRepository jwtRepository;
+
+    public Jwt tokenByValeur(String valeur) {
+        return this.jwtRepository.findByValeur(valeur).orElseThrow(() -> new RuntimeException("Aucun token trouvé"));
+    }
 
     public Map<String, String> generate(String username) { // Génération du token
 
         Utilisateur utilisateur = (Utilisateur) this.utilisateurService.loadUserByUsername(username); // Chargement de l'utilisateur
 
-        return this.generateJwt(utilisateur);
+        Map<String, String> jwtMap = this.generateJwt(utilisateur);
+        final Jwt jwt = Jwt // Creation d'un jwt
+                .builder()
+                .valeur(jwtMap.get(BEARER))
+                .desactive(false)
+                .expire(false)
+                .utilisateur(utilisateur)
+                .build();
+
+        this.jwtRepository.save(jwt);
+
+        return jwtMap;
     }
 
     // Extraction du username du token
@@ -76,7 +94,7 @@ public class JwtService {
                 .signWith(getKey(), SignatureAlgorithm.HS256)
                 .compact();
 
-        return Map.of("bearer", bearer);
+        return Map.of(BEARER, bearer);
     }
 
     // Création de la clé de signature pour le token
