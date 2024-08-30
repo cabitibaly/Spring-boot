@@ -3,6 +3,8 @@ package help.bac.avis.entite;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.Date;
+
 @Setter
 @Getter
 @Builder
@@ -21,5 +23,7 @@ public class Jwt {
     @ManyToOne(cascade = {CascadeType.DETACH, CascadeType.MERGE})
     @JoinColumn(name = "utilisateur_id")
     private Utilisateur utilisateur;
+    @OneToOne (cascade = {CascadeType.PERSIST, CascadeType.REMOVE})
+    private RefreshToken refreshToken;
 
 }

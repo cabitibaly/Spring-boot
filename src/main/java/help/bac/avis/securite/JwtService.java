@@ -1,6 +1,7 @@
 package help.bac.avis.securite;
 
 import help.bac.avis.entite.Jwt;
+import help.bac.avis.entite.RefreshToken;
 import help.bac.avis.entite.Utilisateur;
 import help.bac.avis.repository.JwtRepository;
 import help.bac.avis.service.UtilisateurService;
@@ -21,6 +22,7 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -31,6 +33,7 @@ import java.util.stream.Collectors;
 public class JwtService {
 
     public static final String BEARER = "bearer";
+    public static final String REFRESH = "refresh";
     private final String ENCRYPTION_KEY = "92804f57bc0169e8291b008e786251fbd6c5a289e8824bfaebd61f836301ec0c"; // Clé de chiffrement
     private UtilisateurService utilisateurService;
     private JwtRepository jwtRepository;
@@ -48,16 +51,26 @@ public class JwtService {
         Utilisateur utilisateur = (Utilisateur) this.utilisateurService.loadUserByUsername(username); // Chargement de l'utilisateur
         this.disableTokens(utilisateur); // Désactivation des tokens de l'utilisateur
 
-        Map<String, String> jwtMap = this.generateJwt(utilisateur);
+        RefreshToken refreshToken = RefreshToken.builder()
+                .valeur(UUID.randomUUID().toString())
+                .expire(false)
+                .creation(Instant.now())
+                .expiration(Instant.now().plusMillis(30 * 60 * 1000))
+                .build();
+
+        Map<String, String> jwtMap = new java.util.HashMap<>(this.generateJwt(utilisateur));
         final Jwt jwt = Jwt // Creation d'un jwt
                 .builder()
                 .valeur(jwtMap.get(BEARER))
                 .desactive(false)
                 .expire(false)
                 .utilisateur(utilisateur)
+                .refreshToken(refreshToken)
                 .build();
 
         this.jwtRepository.save(jwt);
+
+        jwtMap.put(REFRESH, refreshToken.getValeur());
 
         return jwtMap;
     }
@@ -104,7 +117,7 @@ public class JwtService {
     private Map<String, String> generateJwt(Utilisateur utilisateur) {
 
         final long currentTime = System.currentTimeMillis(); // Temps en millisecondes
-        final long expirationTime = currentTime + 30 * 60 * 1000;
+        final long expirationTime = currentTime +  60 * 1000;
 
         Map<String, Object> claims = Map.of(
                 "nom", utilisateur.getNom(),
@@ -144,8 +157,19 @@ public class JwtService {
     // Suppression des tokens qui ont expiré
     @Scheduled(cron = "0 */1 * * * *")
     public void removeUseLess() {
-        log.info("Suppression des token à " + Instant.now());
         this.jwtRepository.deleteAllByExpireAndDesactive(true, true);
     }
 
+    // Rafraichissement du token
+    public Map<String, String> refreshToken(Map<String, String> refreshTokenRequest) {
+
+        Jwt jwt = this.jwtRepository.findByRefreshToken(refreshTokenRequest.get(REFRESH)).orElseThrow(() -> new RuntimeException("Refresh token invalide"));
+
+        if(jwt.getRefreshToken().isExpire() || jwt.getRefreshToken().getExpiration().isBefore(Instant.now())) {
+            throw new RuntimeException("Refresh token invalide");
+        }
+        this.disableTokens(jwt.getUtilisateur());
+        log.info("Refresh token : " + Instant.now().toString());
+        return this.generate(jwt.getUtilisateur().getEmail());
+    }
 }

@@ -37,6 +37,11 @@ public class UtilisateurControleur {
         this.utilisateurService.activation(activation);
     }
 
+    @PostMapping(path = "/refresh-token")
+    public @ResponseBody Map<String, String> refreshToken(@RequestBody Map<String, String> refreshTokenRequest) {
+        return  this.jwtService.refreshToken(refreshTokenRequest);
+    }
+
     @PostMapping(path = "/deconnexion")
     public void deconnexion() {
         this.jwtService.deconnexion();
