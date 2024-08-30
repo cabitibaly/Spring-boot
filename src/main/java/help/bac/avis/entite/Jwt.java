@@ -3,6 +3,7 @@ package help.bac.avis.entite;
 import jakarta.persistence.*;
 import lombok.*;
 
+@Setter
 @Getter
 @Builder
 @AllArgsConstructor

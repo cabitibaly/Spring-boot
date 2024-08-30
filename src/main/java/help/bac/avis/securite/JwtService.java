@@ -9,14 +9,23 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
+import java.time.Instant;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
+@Slf4j
+@Transactional
 @AllArgsConstructor
 @Service
 public class JwtService {
@@ -27,12 +36,17 @@ public class JwtService {
     private JwtRepository jwtRepository;
 
     public Jwt tokenByValeur(String valeur) {
-        return this.jwtRepository.findByValeur(valeur).orElseThrow(() -> new RuntimeException("Aucun token trouvé"));
+        return this.jwtRepository.findByValeurAndDesactiveAndExpire(
+                valeur,
+                false,
+                false
+        ).orElseThrow(() -> new RuntimeException("Token invalide ou inconnu"));
     }
 
     public Map<String, String> generate(String username) { // Génération du token
 
         Utilisateur utilisateur = (Utilisateur) this.utilisateurService.loadUserByUsername(username); // Chargement de l'utilisateur
+        this.disableTokens(utilisateur); // Désactivation des tokens de l'utilisateur
 
         Map<String, String> jwtMap = this.generateJwt(utilisateur);
         final Jwt jwt = Jwt // Creation d'un jwt
@@ -46,6 +60,18 @@ public class JwtService {
         this.jwtRepository.save(jwt);
 
         return jwtMap;
+    }
+
+    // Désactivation des tokens de l'utilisateur
+    private void disableTokens(Utilisateur utilisateur) {
+        final List<Jwt> jwtList = this.jwtRepository.findUtilisateur(utilisateur.getEmail()).peek(
+                jwt -> {
+                    jwt.setDesactive(true);
+                    jwt.setExpire(true);
+                }
+        ).collect(Collectors.toList());
+
+        this.jwtRepository.saveAll(jwtList);
     }
 
     // Extraction du username du token
@@ -78,7 +104,7 @@ public class JwtService {
     private Map<String, String> generateJwt(Utilisateur utilisateur) {
 
         final long currentTime = System.currentTimeMillis(); // Temps en millisecondes
-        final long expirationTime = currentTime * 30 * 60 * 1000;
+        final long expirationTime = currentTime + 30 * 60 * 1000;
 
         Map<String, Object> claims = Map.of(
                 "nom", utilisateur.getNom(),
@@ -101,6 +127,25 @@ public class JwtService {
     private Key getKey() {
        final byte[] decoder = Decoders.BASE64.decode(ENCRYPTION_KEY);
         return Keys.hmacShaKeyFor(decoder);
+    }
+
+    public void deconnexion() {
+        Utilisateur utilisateur = (Utilisateur) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Jwt jwt = this.jwtRepository.findUtilisateurValidToken(
+                utilisateur.getEmail(),
+                false,
+                false
+        ).orElseThrow(() -> new RuntimeException("TOKEN_INVALIDE"));
+        jwt.setExpire(true);
+        jwt.setDesactive(true);
+        this.jwtRepository.save(jwt);
+    }
+
+    // Suppression des tokens qui ont expiré
+    @Scheduled(cron = "0 */1 * * * *")
+    public void removeUseLess() {
+        log.info("Suppression des token à " + Instant.now());
+        this.jwtRepository.deleteAllByExpireAndDesactive(true, true);
     }
 
 }
