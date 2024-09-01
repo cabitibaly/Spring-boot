@@ -72,4 +72,21 @@ public class UtilisateurService implements UserDetailsService { // UserDetailsSe
         utilisateurActiver.setActif(true);
         this.utilisateurRepository.save(utilisateurActiver);
     }
+
+    public void modificationMotDePasse(Map<String, String> parametres) {
+        Utilisateur utilisateur = (Utilisateur) this.loadUserByUsername(parametres.get("email"));
+        this.validationService.enregistrer(utilisateur); // Probleme avec la clé étrangère
+    }
+
+    public void nouveauMotDePasse(Map<String, String> parametres) {
+        Utilisateur utilisateur = (Utilisateur) this.loadUserByUsername(parametres.get("email"));
+        Validation validation = this.validationService.lireEnFonctionDuCode(parametres.get("code"));
+
+        if(validation.getUtilisateur().getEmail().equals(utilisateur.getEmail())) {
+            String mdpCrypte = passwordEncoder.encode(parametres.get("password"));
+            utilisateur.setMdp(mdpCrypte);
+            this.utilisateurRepository.save(utilisateur);
+        }
+
+    }
 }

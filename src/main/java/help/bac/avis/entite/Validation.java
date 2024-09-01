@@ -22,6 +22,6 @@ public class Validation {
     private Instant expiration; // Date d'expiration
     private Instant activation; // Date d'activation
     private String code;
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = {CascadeType.MERGE, CascadeType.DETACH})
     private Utilisateur utilisateur;
 }

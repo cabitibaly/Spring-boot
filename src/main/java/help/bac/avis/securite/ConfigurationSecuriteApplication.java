@@ -44,6 +44,8 @@ public class ConfigurationSecuriteApplication {
                                                     .requestMatchers(HttpMethod.POST,"/activation").permitAll()
                                                     .requestMatchers(HttpMethod.POST,"/connexion").permitAll()
                                                     .requestMatchers(HttpMethod.POST,"/refresh-token").permitAll()
+                                                    .requestMatchers(HttpMethod.POST,"/modification-mot-de-passe").permitAll()
+                                                    .requestMatchers(HttpMethod.POST,"/nouveau-mot-de-passe").permitAll()
                                                     .anyRequest().authenticated()
                             ) // Une session pour l'authentification de l'utilisateur car spring fonctionne en session
                             .sessionManagement(httpSecuritySessionManagementConfigurer ->

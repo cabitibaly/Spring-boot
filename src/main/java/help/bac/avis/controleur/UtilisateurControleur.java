@@ -37,6 +37,16 @@ public class UtilisateurControleur {
         this.utilisateurService.activation(activation);
     }
 
+    @PostMapping(path = "/modification-mot-de-passe")
+    public void modificationMotDePasse(@RequestBody Map<String, String> parametres) {
+        this.utilisateurService.modificationMotDePasse(parametres);
+    }
+
+    @PostMapping(path = "/nouveau-mot-de-passe")
+    public void nouveauMotDePasse(@RequestBody Map<String, String> parametres) {
+        this.utilisateurService.nouveauMotDePasse(parametres);
+    }
+
     @PostMapping(path = "/refresh-token")
     public @ResponseBody Map<String, String> refreshToken(@RequestBody Map<String, String> refreshTokenRequest) {
         return  this.jwtService.refreshToken(refreshTokenRequest);
