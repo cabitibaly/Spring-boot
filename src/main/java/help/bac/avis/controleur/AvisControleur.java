@@ -7,6 +7,8 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @AllArgsConstructor
 @RequestMapping("/avis") // Cette annotation permet de définir une route pour les endpoints
 @RestController
@@ -17,5 +19,10 @@ public class AvisControleur {
     @PostMapping
     public void creerAvis(@RequestBody Avis avis) { // Nous créons un nouvel avis
         this.avisService.creer(avis);
+    }
+
+    @GetMapping
+    public List<Avis> liste() {
+        return this.avisService.liste();
     }
 }

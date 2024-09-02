@@ -1,12 +1,11 @@
 package help.bac.avis.service;
 
-import help.bac.avis.TypeDeRole;
+import help.bac.avis.enums.TypeDeRole;
 import help.bac.avis.entite.Role;
 import help.bac.avis.entite.Utilisateur;
 import help.bac.avis.entite.Validation;
 import help.bac.avis.repository.UtilisateurRepository;
 import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -14,6 +13,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -88,5 +88,9 @@ public class UtilisateurService implements UserDetailsService { // UserDetailsSe
             this.utilisateurRepository.save(utilisateur);
         }
 
+    }
+
+    public List<Utilisateur> liste() {
+        return (List<Utilisateur>) this.utilisateurRepository.findAll();
     }
 }

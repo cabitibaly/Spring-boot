@@ -7,6 +7,8 @@ import lombok.AllArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @AllArgsConstructor
 @Service // Service c'est une classe qui est déclarée comme service
 public class AvisService {
@@ -17,5 +19,9 @@ public class AvisService {
         Utilisateur utilisateur = (Utilisateur) SecurityContextHolder.getContext().getAuthentication().getPrincipal(); // Nous récupérons l'utilisateur connecté
         avis.setUtilisateur(utilisateur); // Nous définissons l'utilisateur associé à l'avis
         this.avisRepository.save(avis);
+    }
+
+    public List<Avis> liste() {
+        return (List<Avis>) this.avisRepository.findAll();
     }
 }

@@ -1,14 +1,12 @@
 package help.bac.avis.entite;
 
-import help.bac.avis.TypeDeRole;
+import help.bac.avis.enums.TypeDeRole;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
@@ -19,5 +17,6 @@ public class Role {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
     @Enumerated(EnumType.STRING) // EnumType.STRING permet de stocker les roles sous forme de chaîne de caractères
+    @Column(length = 20)
     private TypeDeRole libelle;
 }

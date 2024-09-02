@@ -1,10 +1,7 @@
 package help.bac.avis.entite;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,6 +12,7 @@ import java.util.List;
 
 @Getter
 @Setter
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
@@ -34,7 +32,7 @@ public class Utilisateur implements UserDetails { // UserDetails est un utilisat
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_"+this.role.getLibelle())); // la Liste des roles d'un utilisateur
+        return this.role.getLibelle().getAuthorities(); // On récupère les permissions de l'utilisateur
     }
 
     @Override

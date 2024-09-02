@@ -1,6 +1,7 @@
 package help.bac.avis.securite;
 
 import help.bac.avis.service.UtilisateurService;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,6 +10,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -19,6 +21,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
+@EnableMethodSecurity // Restriction sur des methods
 @EnableWebSecurity // Permet de déclarer la configuration de sécurité
 public class ConfigurationSecuriteApplication {
 
@@ -46,6 +49,7 @@ public class ConfigurationSecuriteApplication {
                                                     .requestMatchers(HttpMethod.POST,"/refresh-token").permitAll()
                                                     .requestMatchers(HttpMethod.POST,"/modification-mot-de-passe").permitAll()
                                                     .requestMatchers(HttpMethod.POST,"/nouveau-mot-de-passe").permitAll()
+                                                    .requestMatchers(HttpMethod.GET, "/avis").hasAnyAuthority("ROLE_MANAGER","ROLE_ADMINISTRATEUR") // On autorise l'accès à l'endpoint /avis seulement pour les utilisateurs ayant le role ADMINISTRATEUR
                                                     .anyRequest().authenticated()
                             ) // Une session pour l'authentification de l'utilisateur car spring fonctionne en session
                             .sessionManagement(httpSecuritySessionManagementConfigurer ->
