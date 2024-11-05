@@ -49,6 +49,7 @@ public class ConfigurationSecuriteApplication {
                                                     .requestMatchers(HttpMethod.POST,"/refresh-token").permitAll()
                                                     .requestMatchers(HttpMethod.POST,"/modification-mot-de-passe").permitAll()
                                                     .requestMatchers(HttpMethod.POST,"/nouveau-mot-de-passe").permitAll()
+                                                    .requestMatchers(HttpMethod.GET,"/pdf").permitAll()
                                                     .requestMatchers(HttpMethod.GET, "/avis").hasAnyAuthority("ROLE_MANAGER","ROLE_ADMINISTRATEUR") // On autorise l'accès à l'endpoint /avis seulement pour les utilisateurs ayant le role ADMINISTRATEUR
                                                     .anyRequest().authenticated()
                             ) // Une session pour l'authentification de l'utilisateur car spring fonctionne en session

@@ -1,9 +1,14 @@
 package help.bac.avis.service;
 
 import help.bac.avis.entite.Validation;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.util.ByteArrayDataSource;
 import lombok.AllArgsConstructor;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMailMessage;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 @AllArgsConstructor
@@ -25,5 +30,19 @@ public class NotificationService {
 
         message.setText(text);
         javaMailSender.send(message);
+    }
+
+    public void envoyerPdf(byte[] pdf) throws MessagingException {
+        MimeMessage message = javaMailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+        helper.setTo("clement.alexandre@gmail.com");
+        helper.setFrom("no-reply@help.bac");
+        helper.setSubject("PDF");
+        helper.setText("Votre PDF");
+
+        ByteArrayDataSource dataSource = new ByteArrayDataSource(pdf, "application/pdf");
+        helper.addAttachment("doc.pdf", dataSource);
+        javaMailSender.send(message);
+
     }
 }

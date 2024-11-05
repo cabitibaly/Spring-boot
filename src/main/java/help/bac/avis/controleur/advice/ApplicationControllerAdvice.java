@@ -54,7 +54,8 @@ public class ApplicationControllerAdvice {
 
     @ResponseStatus(UNAUTHORIZED)
     @ExceptionHandler(value = Exception.class)
-    public Map<String, String> exceptionHandler() {
+    public Map<String, String> exceptionHandler(Exception exception) {
+        log.error(exception.getMessage(), exception);
         return Map.of("erreur", "Quelque s'est mal passé :(");
     }
 
