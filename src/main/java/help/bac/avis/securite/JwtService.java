@@ -1,5 +1,6 @@
 package help.bac.avis.securite;
 
+import help.bac.avis.dto.UtilisateurDTO;
 import help.bac.avis.entite.Jwt;
 import help.bac.avis.entite.RefreshToken;
 import help.bac.avis.entite.Utilisateur;
@@ -46,7 +47,7 @@ public class JwtService {
         ).orElseThrow(() -> new RuntimeException("Token invalide ou inconnu"));
     }
 
-    public Map<String, String> generate(String username) { // Génération du token
+    public Map<String, Object> generate(String username) { // Génération du token
 
         Utilisateur utilisateur = (Utilisateur) this.utilisateurService.loadUserByUsername(username); // Chargement de l'utilisateur
         this.disableTokens(utilisateur); // Désactivation des tokens de l'utilisateur
@@ -55,13 +56,13 @@ public class JwtService {
                 .valeur(UUID.randomUUID().toString())
                 .expire(false)
                 .creation(Instant.now())
-                .expiration(Instant.now().plusMillis(30 * 60 * 1000))
+                .expiration(Instant.now().plusMillis(360 * 60 * 1000))
                 .build();
 
-        Map<String, String> jwtMap = new java.util.HashMap<>(this.generateJwt(utilisateur));
+        Map<String, Object> jwtMap = new java.util.HashMap<>(this.generateJwt(utilisateur));
         final Jwt jwt = Jwt // Creation d'un jwt
                 .builder()
-                .valeur(jwtMap.get(BEARER))
+                .valeur((String) jwtMap.get(BEARER))
                 .desactive(false)
                 .expire(false)
                 .utilisateur(utilisateur)
@@ -114,15 +115,23 @@ public class JwtService {
     }
 
     // Construction du token
-    private Map<String, String> generateJwt(Utilisateur utilisateur) {
+    private Map<String, Object> generateJwt(Utilisateur utilisateur) {
 
         final long currentTime = System.currentTimeMillis(); // Temps en millisecondes
-        final long expirationTime = currentTime + 60 * 60 * 1000;
+        final long expirationTime = currentTime + 360 * 60 * 1000;
 
         Map<String, Object> claims = Map.of(
                 "nom", utilisateur.getNom(),
                 Claims.EXPIRATION, new Date(expirationTime),
                 Claims.SUBJECT, utilisateur.getEmail()
+        );
+
+        UtilisateurDTO utilisateurDTO = new UtilisateurDTO(
+                utilisateur.getId(),
+                utilisateur.getNom(),
+                utilisateur.getEmail(),
+                utilisateur.isActif(),
+                utilisateur.getRole().getLibelle().toString()
         );
 
         String bearer = Jwts.builder()
@@ -133,7 +142,7 @@ public class JwtService {
                 .signWith(getKey(), SignatureAlgorithm.HS256)
                 .compact();
 
-        return Map.of(BEARER, bearer);
+        return Map.of(BEARER, bearer, "utilisateur", utilisateurDTO, "satus", 200);
     }
 
     // Création de la clé de signature pour le token
@@ -161,7 +170,7 @@ public class JwtService {
     }
 
     // Rafraichissement du token
-    public Map<String, String> refreshToken(Map<String, String> refreshTokenRequest) {
+    public Map<String, Object> refreshToken(Map<String, String> refreshTokenRequest) {
 
         Jwt jwt = this.jwtRepository.findByRefreshToken(refreshTokenRequest.get(REFRESH)).orElseThrow(() -> new RuntimeException("Refresh token invalide"));
 

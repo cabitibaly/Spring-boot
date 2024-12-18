@@ -4,14 +4,22 @@ import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import jakarta.mail.MessagingException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.tika.Tika;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 import org.xhtmlrenderer.pdf.ITextRenderer;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -20,7 +28,7 @@ import java.util.UUID;
 @Service
 public class PdfService {
     private final SpringTemplateEngine springTemplateEngine;
-    private NotificationService notificationService;
+    private final NotificationService notificationService;
     private final String url = "http://localhost:8080/";
 
     public PdfService(SpringTemplateEngine springTemplateEngine, NotificationService notificationService) {
@@ -28,7 +36,7 @@ public class PdfService {
         this.notificationService = notificationService;
     }
 
-    public byte[] generatePdf(String template) throws MessagingException, IOException {
+    public Map generatePdf(String template) throws MessagingException, IOException {
         // Configuration cloudinary
         Map<String, String> config = new HashMap<>();
         config.put("cloud_name", System.getenv("cloud_name"));
@@ -54,12 +62,31 @@ public class PdfService {
         renderer.createPDF(stream);
         byte[] pdf = stream.toByteArray();
 
-        notificationService.envoyerPdf(pdf);
+//        notificationService.envoyerPdf(pdf);
         String public_id = UUID.randomUUID().toString();
         Map result = cloudinary.uploader()
                 .upload(pdf, ObjectUtils.asMap("public_id", public_id));
-        log.info("result: " + result.get("url"));
 
-        return pdf;
+        Map data = new HashMap<>();
+        data.put("pdf", pdf);
+        data.put("url", result.get("url").toString());
+
+        return data;
+    }
+
+    public InputStreamResource telechargerPdf(String url) throws IOException {
+
+        CloseableHttpClient httpClient = HttpClients.createDefault();
+        HttpGet httpGet = new HttpGet(url);
+        CloseableHttpResponse response = httpClient.execute(httpGet);
+        HttpEntity entity = response.getEntity();
+
+        if (entity != null) {
+            InputStream inputStream = entity.getContent();
+
+            return new InputStreamResource(inputStream);
+        }
+
+        return null;
     }
 }

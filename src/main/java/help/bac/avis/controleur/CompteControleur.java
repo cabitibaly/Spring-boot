@@ -48,7 +48,7 @@ public class CompteControleur {
     }
 
     @PostMapping(path = "/refresh-token")
-    public @ResponseBody Map<String, String> refreshToken(@RequestBody Map<String, String> refreshTokenRequest) {
+    public @ResponseBody Map<String, Object> refreshToken(@RequestBody Map<String, String> refreshTokenRequest) {
         return  this.jwtService.refreshToken(refreshTokenRequest);
     }
 
@@ -58,7 +58,7 @@ public class CompteControleur {
     }
 
     @PostMapping(path = "/connexion")
-    public Map<String, String> connexion(@RequestBody AuthentificationDTO authentificationDTO) {
+    public Map<String, Object> connexion(@RequestBody AuthentificationDTO authentificationDTO) {
 
         // Authentification d'un utilisateur avec son email et mot de passe
         Authentication authenticate = this.authenticationManager.authenticate(

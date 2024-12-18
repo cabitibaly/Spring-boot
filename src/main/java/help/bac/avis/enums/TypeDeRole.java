@@ -16,7 +16,12 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public enum TypeDeRole {
     UTILISATEUR(
-            Set.of(TypePermission.UTILISATEUR_CREATE_AVIS)
+            Set.of(
+                    UTILISATEUR_CREATE,
+                    UTILISATEUR_READ,
+                    UTILISATEUR_UPDATE,
+                    UTILISATEUR_DELETE
+            )
     ),
     MANAGER(
             Set.of(
